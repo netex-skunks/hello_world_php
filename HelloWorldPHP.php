@@ -51,10 +51,14 @@ class HelloWorldPHP
     protected function checkInputData()
     {
         if (count($_GET) == 1) {
-            if ($_GET['token'] == md5(self::TOKEN_INPUT)) {
-                self::setSuccessResultContent();
+            if (array_key_exists("token", $_GET)) {
+                if ($_GET['token'] == md5(self::TOKEN_INPUT)) {
+                    self::setSuccessResultContent();
+                } else {
+                    self::setErrorResultContent('Wrong input token', 'tokenInvalid');
+                }
             } else {
-                self::setErrorResultContent('Wrong input token', 'tokenInvalid');
+                self::setErrorResultContent('Bad request', 'usageLimits');
             }
         } else {
             self::setErrorResultContent('Bad request', 'usageLimits');
