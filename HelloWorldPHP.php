@@ -23,24 +23,8 @@ class HelloWorldPHP
     public static function construct()
     {
         self::$resultContent = array ();
-        self::getLanguages();
+        self::$languages = __DIR__ . "/languages";
         self::checkInputData();
-    }
-
-    /**
-     *
-     * select all languages code from tables
-     */
-
-    protected function getLanguages()
-    {
-//        self::$languages = '["af","sq","ar","hy","az","eu","be","bn","bs","bg","ca","ceb","ny","zh-CN","zh-TW","hr","cs","da","nl","en","eo","et","tl","fi","fr","gl","ka","de","el","gu","ht","ha","iw","hi","hmn","hu","is","ig","id","ga","it","ja","jw","kn","kk","km","ko","lo","la","lv","lt","mk","mg","ms","ml","mt","mi","mr","mn","my","ne","no","fa","pl","pt","ma","ro","ru","sr","st","si","sk","sl","so","es","su","sw","sv","tg","ta","te","th","tr","uk","ur","uz","vi","cy","yi","yo","zu"]';
-        self::$languages = '["arabic","bulgarian","catalan","chinese-simplified","chinese-traditional","czech","danish","dutch","english",
-                             "estonian","finnish","french","german","greek","haitian-creole","hebrew","hindi","hungarian","indonesian",
-                             "italian","japanese","klingon","korean","latvian","lithuanian","malay","maltese","norwegian","persian",
-                             "polish","portuguese","romanian","russian","slovak","slovenian","spanish","swedish","thai","turkish",
-                             "ukrainian","urdu","vietnamese","welsh"]';
-
     }
 
 
@@ -88,7 +72,7 @@ class HelloWorldPHP
      */
     protected function setSuccessResultContent()
     {
-        $content = file_get_contents("http://translate.reference.com/english/" . self::getLanguageTranslate() . "/hello-world/tSGVsbG8gV29ybGQ%3D");
+        $content = file_get_contents("http://translate.reference.com/english/" . self::getLanguageTranslate() . "/hello-world");
         preg_match('/placeholder="Translation".*<\//', $content, $result);
         preg_match('/>.*</', $result[0], $resultWord);
         $result = str_replace(">", "", $resultWord[0]);
@@ -104,7 +88,7 @@ class HelloWorldPHP
      */
     protected function getLanguageTranslate()
     {
-        $languageCodes = json_decode(self::$languages, true);
+        $languageCodes = json_decode(file_get_contents(self::$languages), true);
         $languageTo = $languageCodes[array_rand($languageCodes)];
         return $languageTo;
     }
