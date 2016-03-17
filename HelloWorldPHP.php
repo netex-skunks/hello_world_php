@@ -8,46 +8,48 @@
 
 namespace Netex;
 
-
-class HelloWorldPHP
+final class HelloWorldPHP
 {
     const TOKEN_INPUT = 'Netex';
 
-    public static $resultContent;
+    /**
+     * @var string [] $resultContent
+     */
+    private $resultContent = array();
 
-    public static $languages;
+    /**
+     * @var string
+     */
+    private static $languagesFileLocation = __DIR__ . "/languages";
 
-    public static $toLanguage;
-
-
-    public static function construct()
+    /**
+     * HelloWorldPHP constructor.
+     */
+    function __construct()
     {
-        self::$resultContent = array ();
-        self::$languages = __DIR__ . "/languages";
-        self::checkInputData();
+        $this->checkInputData();
     }
-
 
     /**
      *
      * check input GET data
      */
-    protected function checkInputData()
+    private function checkInputData()
     {
         if (count($_GET) == 1) {
             if (array_key_exists("token", $_GET)) {
                 if ($_GET['token'] == md5(self::TOKEN_INPUT)) {
-                    self::setSuccessResultContent();
+                    $this->setSuccessResultContent();
                 } else {
-                    self::setErrorResultContent('Wrong input token', 'tokenInvalid');
+                    $this->setErrorResultContent('Wrong input token', 'tokenInvalid');
                 }
             } else {
-                self::setErrorResultContent('Bad request', 'usageLimits');
+                $this->setErrorResultContent('Bad request', 'usageLimits');
             }
         } else {
-            self::setErrorResultContent('Bad request', 'usageLimits');
+            $this->setErrorResultContent('Bad request', 'usageLimits');
         }
-        self::getResultContent();
+        $this->getResultContent();
     }
 
 
@@ -56,13 +58,13 @@ class HelloWorldPHP
      * @param $reason String;
      * set result content with error
      * */
-    protected function setErrorResultContent($message, $reason)
+    private function setErrorResultContent($message, $reason)
     {
         http_response_code(400);
-        self::$resultContent['error']['errors']['reason'] = $reason;
-        self::$resultContent['error']['errors']['message'] = $message;
-        self::$resultContent['error']['code'] = '400';
-        self::$resultContent['error']['message'] = 'Bad request';
+        $this->resultContent['error']['errors']['reason'] = $reason;
+        $this->resultContent['error']['errors']['message'] = $message;
+        $this->resultContent['error']['code'] = '400';
+        $this->resultContent['error']['message'] = 'Bad request';
 
     }
 
@@ -70,25 +72,44 @@ class HelloWorldPHP
     /**
      * set result content with success
      */
-    protected function setSuccessResultContent()
+    private function setSuccessResultContent()
     {
-        $content = file_get_contents("http://translate.reference.com/english/" . self::getLanguageTranslate() . "/hello-world");
-        preg_match('/placeholder="Translation".*<\//', $content, $result);
-        preg_match('/>.*</', $result[0], $resultWord);
-        $result = str_replace(">", "", $resultWord[0]);
-        $word = str_replace("<", "", $result);
+        $translation = $this->getRandomTranslation("hello world");
+
         http_response_code(200);
-        self::$resultContent['success']['message'] = 'success request';
-        self::$resultContent['success']['code'] = '200';
-        self::$resultContent['message'] = $word;
+        $this->resultContent['success']['message'] = 'success request';
+        $this->resultContent['success']['code'] = '200';
+        $this->resultContent['message'] = $translation;
+        
+    }
+
+    /**
+     * @param $text
+     * @return mixed
+     */
+    private function getRandomTranslation($text)
+    {
+        $text = preg_replace('/\s/','-',$text);
+
+        $language = self::getLanguageTranslate();
+        $pageContent = file_get_contents("http://translate.reference.com/english/" . $language . "/".$text);
+
+        preg_match('/placeholder="Translation".*<\//', $pageContent, $result);
+        preg_match('/>.*</', $result[0], $result);
+
+        $result = str_replace(">", "", $result[0]);
+
+        $translation = str_replace("<", "", $result);
+
+        return $translation;
     }
 
     /**
      * get language rand translate
      */
-    protected function getLanguageTranslate()
+    private function getLanguageTranslate()
     {
-        $languageCodes = json_decode(file_get_contents(self::$languages), true);
+        $languageCodes = json_decode(file_get_contents(self::$languagesFileLocation), true);
         $languageTo = $languageCodes[array_rand($languageCodes)];
         return $languageTo;
     }
@@ -96,12 +117,12 @@ class HelloWorldPHP
     /**
      * get result json content
      */
-    protected function getResultContent()
+    private function getResultContent()
     {
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(self::$resultContent, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo json_encode($this->resultContent, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
 }
 
-\Netex\HelloWorldPHP::construct();
+new HelloWorldPHP();
